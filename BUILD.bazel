@@ -18,9 +18,8 @@ cc_library(
         'PACKAGE_VERSION=\\"{}\\"'.format(PACKAGE_VERSION),
         'PACKAGE_STRING=\\"{}\\"'.format(PACKAGE_STRING),
     ],
-    includes = ["."],
-    strip_include_prefix = "protobuf-c/",
-    #include_prefix = "protobuf-c/",
+    copts = [ "-Ithirdparty/protobuf-c"],
+    includes = ["."],   # this will result in anyone who depends on this using `-isystem thirdparty/protobuf-c`
     deps = [
         "@com_google_protobuf//:protobuf",
     ]
@@ -74,7 +73,6 @@ cc_test(
         "t/test.pb-c.c",
         "t/test.pb-c.h",
     ],
-    copts = [ "-I." ],  ## need this since the generated protobuf sources assume includes are in a system header
     deps = [
         ":protobuf-c",
     ]
@@ -88,7 +86,6 @@ cc_test(
         "t/test-full.pb.h",
         "t/test-full.pb.cc",
     ],
-    copts = [ "-I.", "-It/generated-code2"],  ## need this since the generated protobuf sources assume includes are in a system header
     testonly = False,
     deps = [
         ":protobuf-c",
@@ -106,7 +103,6 @@ cc_test(
         "t/test-optimized.pb-c.h",
         "t/test-optimized.pb-c.c",
     ],
-    copts = [ "-I.",], #"-It/generated-code2"],  ## need this since the generated protobuf sources assume includes are in a system header
     deps = [
         ":protobuf-c",
     ]
@@ -119,7 +115,6 @@ cc_test(
         "t/issue220/issue220.pb-c.c",
         "t/issue220/issue220.pb-c.h",
     ],
-    copts = [ "-I." ],  ## need this since the generated protobuf sources assume includes are in a system header
     deps = [
         ":protobuf-c",
     ]
@@ -132,7 +127,6 @@ cc_test(
         "t/issue251/issue251.pb-c.c",
         "t/issue251/issue251.pb-c.h",
     ],
-    copts = [ "-I." ],  ## need this since the generated protobuf sources assume includes are in a system header
     deps = [
         ":protobuf-c",
     ]
@@ -143,7 +137,7 @@ cc_test(
     srcs = [
         "t/version/version.c",
     ],
-    copts = [ "-Iprotobuf-c" ],  ## so inconsistent!  Sometimes it uses "", sometimes <>, sometimes with protobuf-c/ prepended
+    copts = [ "-Ithirdparty/protobuf-c/protobuf-c" ],  ## so inconsistent!  Sometimes it uses "", sometimes <>, sometimes with protobuf-c/ prepended
     deps = [
         ":protobuf-c",
     ]
@@ -155,16 +149,11 @@ cc_test(
         ":c_proto3_targets",
         "t/generated-code/test-generated-code.c"
     ],
-
     defines = [ "PROTO3"],
-    copts = [ "-I." ],
     deps = [
         ":protobuf-c",
     ]
 )
-
-# ADD_EXECUTABLE(test-version ${TEST_DIR}/version/version.c)
-# TARGET_LINK_LIBRARIES(test-version protobuf-c)
 
 genrule(
     name = "c_test_targets",
@@ -226,7 +215,6 @@ genrule(
     cmd = "$(location @com_google_protobuf//:protoc)  -I. $< --cpp_out=$(BINDIR)",
     tools = [ 
         "@com_google_protobuf//:protoc",
-        "@com_google_protobuf//:protoc_lib"
     ],
 )
 
