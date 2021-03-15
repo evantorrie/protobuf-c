@@ -1,0 +1,11 @@
+load("@com_github_ericnorris_rules_nfpm//nfpm:defs.bzl", "nfpm_package")
+
+nfpm_package(
+    name = "protobuf-c.rpm",
+    visibility = ["//visibility:public"],
+    config = "protobuf-c.nfpm.yaml",
+    deps = [
+        "@//:protobuf_so",
+        "@//:protobuf_a",
+    ],
+)

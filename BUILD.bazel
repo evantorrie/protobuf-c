@@ -1,0 +1,288 @@
+package(default_visibility = ["//visibility:public"])
+
+PACKAGE_VERSION = "1.3.3"
+PACKAGE_NAME = "protobuf-c"
+PACKAGE_STRING = "'{} {}'".format(PACKAGE_NAME, PACKAGE_VERSION)
+
+cc_library(
+    name = "protobuf-c",
+    visibility = ["//visibility:public"],
+    srcs = [ 
+        "protobuf-c/protobuf-c.c"
+    ],
+    hdrs = [ 
+        "protobuf-c/protobuf-c.h" 
+    ],
+    defines = [
+        "HAVE_PROTO3",
+        'PACKAGE_VERSION=\\"{}\\"'.format(PACKAGE_VERSION),
+        'PACKAGE_STRING=\\"{}\\"'.format(PACKAGE_STRING),
+    ],
+    includes = ["."],
+    strip_include_prefix = "protobuf-c/",
+    #include_prefix = "protobuf-c/",
+    deps = [
+        "@com_google_protobuf//:protobuf",
+    ]
+)
+
+## the protoc compiler plugin to generate c code
+cc_binary(
+    name = "protoc-gen-c",
+    visibility = ["//visibility:public"],
+    srcs = glob(["protoc-c/*.cc", "protoc-c/*.h"]),
+    #need both of these because protoc-c/*.cc use #include <protoc-c/...> !?!?
+    #and yet protoc-c/*.cc also does #include "protobuf.h"
+    copts = [ "-Ithirdparty/protobuf-c", "-Ithirdparty/protobuf-c/protobuf-c", ], 
+    local_defines = [
+        'PACKAGE_STRING=\\"{}\\"'.format(PACKAGE_STRING),
+    ],
+    deps = [
+        ":protobuf-c",
+        "@com_google_protobuf//:protoc_lib",
+    ]
+)
+
+filegroup(
+    name='protobuf_so',
+    srcs=[':protobuf-c'],
+    output_group = 'dynamic_library',
+)
+
+filegroup(
+    name='protobuf_a',
+    srcs=[':protobuf-c'],
+    output_group = 'archive',
+)
+
+test_suite(
+    name = "protobufc-tests",
+    tests = [
+        ":test-generated-code",
+        ":test-generated-code2",
+        ":test-generated-code3",
+        ":issue220",
+        ":issue251",
+        ":version",
+    ]
+)
+
+cc_test(
+    name = "test-generated-code",
+    srcs = [
+        "t/generated-code/test-generated-code.c",
+        "t/test.pb-c.c",
+        "t/test.pb-c.h",
+    ],
+    copts = [ "-I." ],  ## need this since the generated protobuf sources assume includes are in a system header
+    deps = [
+        ":protobuf-c",
+    ]
+)
+
+cc_test(
+    name = "cxx-generate-packed-data",
+    srcs = [
+        "t/generated-code2/cxx-generate-packed-data.cc",
+        "t/generated-code2/common-test-arrays.h",
+        "t/test-full.pb.h",
+        "t/test-full.pb.cc",
+    ],
+    copts = [ "-I.", "-It/generated-code2"],  ## need this since the generated protobuf sources assume includes are in a system header
+    testonly = False,
+    deps = [
+        ":protobuf-c",
+    ]
+)
+
+cc_test(
+    name = "test-generated-code2",
+    srcs = [
+        "t/generated-code2/test-generated-code2.c",
+        "t/generated-code2/common-test-arrays.h",
+        "t/generated-code2/test-full-cxx-output.inc",
+        "t/test-full.pb-c.h",
+        "t/test-full.pb-c.c",
+        "t/test-optimized.pb-c.h",
+        "t/test-optimized.pb-c.c",
+    ],
+    copts = [ "-I.",], #"-It/generated-code2"],  ## need this since the generated protobuf sources assume includes are in a system header
+    deps = [
+        ":protobuf-c",
+    ]
+)
+
+cc_test(
+    name = "issue220",
+    srcs = [
+        "t/issue220/issue220.c",
+        "t/issue220/issue220.pb-c.c",
+        "t/issue220/issue220.pb-c.h",
+    ],
+    copts = [ "-I." ],  ## need this since the generated protobuf sources assume includes are in a system header
+    deps = [
+        ":protobuf-c",
+    ]
+)
+
+cc_test(
+    name = "issue251",
+    srcs = [
+        "t/issue251/issue251.c",
+        "t/issue251/issue251.pb-c.c",
+        "t/issue251/issue251.pb-c.h",
+    ],
+    copts = [ "-I." ],  ## need this since the generated protobuf sources assume includes are in a system header
+    deps = [
+        ":protobuf-c",
+    ]
+)
+
+cc_test(
+    name = "version",
+    srcs = [
+        "t/version/version.c",
+    ],
+    copts = [ "-Iprotobuf-c" ],  ## so inconsistent!  Sometimes it uses "", sometimes <>, sometimes with protobuf-c/ prepended
+    deps = [
+        ":protobuf-c",
+    ]
+)
+
+cc_test(
+    name = "test-generated-code3",
+    srcs = [
+        ":c_proto3_targets",
+        "t/generated-code/test-generated-code.c"
+    ],
+
+    defines = [ "PROTO3"],
+    copts = [ "-I." ],
+    deps = [
+        ":protobuf-c",
+    ]
+)
+
+# ADD_EXECUTABLE(test-version ${TEST_DIR}/version/version.c)
+# TARGET_LINK_LIBRARIES(test-version protobuf-c)
+
+genrule(
+    name = "c_test_targets",
+    srcs = [
+        "t/test.proto",
+    ],
+    outs = [
+        "t/test.pb-c.c",
+        "t/test.pb-c.h",
+    ],
+    cmd = "$(location @com_google_protobuf//:protoc) --plugin=$(location :protoc-gen-c) -I. $< --c_out=$(BINDIR)",
+    tools = [ 
+        "@com_google_protobuf//:protoc",
+        ":protoc-gen-c",
+    ],
+)
+
+genrule(
+    name = "c_test-full_targets",
+    srcs = [
+        "t/test-full.proto",
+    ],
+    outs = [
+        "t/test-full.pb-c.c",
+        "t/test-full.pb-c.h",
+    ],
+    cmd = "$(location @com_google_protobuf//:protoc) --plugin=$(location :protoc-gen-c) -I. $< --c_out=$(BINDIR)",
+    tools = [ 
+        "@com_google_protobuf//:protoc",
+        ":protoc-gen-c",
+    ],
+)
+
+genrule(
+    name = "c_test-optimized_targets",
+    srcs = [
+        "t/test-optimized.proto",
+    ],
+    outs = [
+        "t/test-optimized.pb-c.c",
+        "t/test-optimized.pb-c.h",
+    ],
+    cmd = "$(location @com_google_protobuf//:protoc) --plugin=$(location :protoc-gen-c) -I. $< --c_out=$(BINDIR)",
+    tools = [ 
+        "@com_google_protobuf//:protoc",
+        ":protoc-gen-c",
+    ],
+)
+
+genrule(
+    name = "cc_test_targets",
+    srcs = [
+        "t/test-full.proto",
+    ],
+    outs = [
+        "t/test-full.pb.cc",
+        "t/test-full.pb.h",
+    ],
+    cmd = "$(location @com_google_protobuf//:protoc)  -I. $< --cpp_out=$(BINDIR)",
+    tools = [ 
+        "@com_google_protobuf//:protoc",
+        "@com_google_protobuf//:protoc_lib"
+    ],
+)
+
+genrule(
+    name = "issue220_targets",
+    srcs = [
+        "t/issue220/issue220.proto",
+    ],
+    outs = [
+        "t/issue220/issue220.pb-c.c",
+        "t/issue220/issue220.pb-c.h",
+    ],
+    cmd = "$(location @com_google_protobuf//:protoc) --plugin=$(location :protoc-gen-c) -I. $< --c_out=$(BINDIR)",
+    tools = [ 
+         "@com_google_protobuf//:protoc",
+        ":protoc-gen-c",
+    ],
+)
+
+genrule(
+    name = "issue251_targets",
+    srcs = [
+        "t/issue251/issue251.proto",
+    ],
+    outs = [
+        "t/issue251/issue251.pb-c.c",
+        "t/issue251/issue251.pb-c.h",
+    ],
+    cmd = "$(location @com_google_protobuf//:protoc) --plugin=$(location :protoc-gen-c) -I. $< --c_out=$(BINDIR)",
+    tools = [ 
+         "@com_google_protobuf//:protoc",
+        ":protoc-gen-c",
+    ],
+)
+
+
+genrule(
+    name = "c_proto3_targets",
+    srcs = [
+        "t/test-proto3.proto",
+    ],
+    outs = [
+        "t/test-proto3.pb-c.c",
+        "t/test-proto3.pb-c.h",
+    ],
+    cmd = "$(location @com_google_protobuf//:protoc) --plugin=$(location :protoc-gen-c) -I. $< --c_out=$(BINDIR)",
+    tools = [ 
+         "@com_google_protobuf//:protoc",
+        ":protoc-gen-c",
+    ],
+)
+
+genrule(
+    name = "generated",
+    outs = [ "t/generated-code2/test-full-cxx-output.inc"],
+    cmd = "$(location :cxx-generate-packed-data) > $@",
+    tools = [ ":cxx-generate-packed-data"],
+)
+

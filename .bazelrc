@@ -1,0 +1,5 @@
+build --verbose_failures
+
+# https://docs.bazel.build/versions/master/user-manual.html#workspace_status
+# calling realpath due to https://github.com/bazelbuild/bazel/issues/5002
+build --workspace_status_command="$(realpath workspace-status.sh)"
