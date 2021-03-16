@@ -10,7 +10,7 @@ description: |
 maintainer: Verizon Media
 
 contents:
-  - src: "{{ index .Dependencies `//:protobuf-c.libprotobuf-c.so`}}"
+  - src: "{{ index .Dependencies `//third_party/protobuf-c:protobuf-c:libprotobuf-c.so`}}"
     dst: /usr/lib64/libprotobuf-c.so.1
     file_info:
       mode: 0644
@@ -19,5 +19,5 @@ contents:
   - src: /usr/lib64/libprotobuf-c.so.1
     dst: /usr/lib64/libprotobuf-c.so.1.0.0
     type: symlink
-  - src: "{{ index .Dependencies `//:protobuf-c.libprotobuf-c.a`}}"
+  - src: "{{ index .Dependencies `//third_party/protobuf-c:protobuf-c:libprotobuf-c.a`}}"
     dst: /usr/lib64/libprotobuf-c.a

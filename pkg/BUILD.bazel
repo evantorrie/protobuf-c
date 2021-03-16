@@ -5,7 +5,7 @@ nfpm_package(
     visibility = ["//visibility:public"],
     config = "protobuf-c.nfpm.yaml",
     deps = [
-        "@//:protobuf_so",
-        "@//:protobuf_a",
+        "//third_party/protobuf-c:protobuf_alias_so",
+        "//third_party/protobuf-c:protobuf_alias_a",
     ],
 )

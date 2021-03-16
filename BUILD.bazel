@@ -42,6 +42,16 @@ cc_binary(
     ]
 )
 
+alias(
+    name = "protobuf_alias_so",
+    actual = ":protobuf_so",
+)
+
+alias(
+    name = "protobuf_alias_a",
+    actual = ":protobuf_a",
+)
+
 filegroup(
     name='protobuf_so',
     srcs=[':protobuf-c'],
