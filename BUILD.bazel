@@ -32,7 +32,7 @@ cc_binary(
     srcs = glob(["protoc-c/*.cc", "protoc-c/*.h"]),
     #need both of these because protoc-c/*.cc use #include <protoc-c/...> !?!?
     #and yet protoc-c/*.cc also does #include "protobuf.h"
-    copts = [ "-Ithirdparty/protobuf-c", "-Ithirdparty/protobuf-c/protobuf-c", ], 
+    copts = [ "-Ithird_party/protobuf-c", "-Ithird_party/protobuf-c/protobuf-c", ],
     local_defines = [
         'PACKAGE_STRING=\\"{}\\"'.format(PACKAGE_STRING),
     ],
@@ -147,7 +147,7 @@ cc_test(
     srcs = [
         "t/version/version.c",
     ],
-    copts = [ "-Ithirdparty/protobuf-c/protobuf-c" ],  ## so inconsistent!  Sometimes it uses "", sometimes <>, sometimes with protobuf-c/ prepended
+    copts = [ "-Ithird_party/protobuf-c/protobuf-c" ],  ## so inconsistent!  Sometimes it uses "", sometimes <>, sometimes with protobuf-c/ prepended
     deps = [
         ":protobuf-c",
     ]
