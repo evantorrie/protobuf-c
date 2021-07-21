@@ -18,7 +18,6 @@ cc_library(
         'PACKAGE_VERSION=\\"{}\\"'.format(PACKAGE_VERSION),
         'PACKAGE_STRING=\\"{}\\"'.format(PACKAGE_STRING),
     ],
-    copts = [ "-Ithird_party/protobuf-c" ],
     includes = ["."],   # this will result in anyone who depends on this using `-isystem thirdparty/protobuf-c`
     deps = [
         "@com_google_protobuf//:protobuf",
@@ -29,17 +28,35 @@ cc_library(
 cc_binary(
     name = "protoc-gen-c",
     visibility = ["//visibility:public"],
-    srcs = glob(["protoc-c/*.cc", "protoc-c/*.h"]),
-    #need both of these because protoc-c/*.cc use #include <protoc-c/...> !?!?
-    #and yet protoc-c/*.cc also does #include "protobuf.h"
-    copts = [ "-Ithird_party/protobuf-c", "-Ithird_party/protobuf-c/protobuf-c", ],
+    srcs = glob(["protoc-c/*.cc"]),
+
     local_defines = [
         'PACKAGE_STRING=\\"{}\\"'.format(PACKAGE_STRING),
     ],
     deps = [
         ":protobuf-c",
         "@com_google_protobuf//:protoc_lib",
+	":protoc-c-includes",
+        ":protobuf-c-includes-flat",
     ]
+)
+
+# This is only needed because protoc-c/*.cc has a #include "protobuf-c.h"
+# and yet, everything else that needs protobuf-c needs "protobuf-c.h"
+# at "protobuf-c/protobuf-c.h"
+cc_library(
+    name = "protobuf-c-includes-flat",
+    hdrs = [
+        "protobuf-c/protobuf-c.h",
+    ],
+    strip_include_prefix = "protobuf-c",
+)
+
+cc_library(
+    name = "protoc-c-includes",
+    hdrs = glob(["protoc-c/*.h"]),
+#    strip_include_prefix = "protoc-c",
+    includes = [ "." ],
 )
 
 alias(
