@@ -18,7 +18,7 @@ cc_library(
         'PACKAGE_VERSION=\\"{}\\"'.format(PACKAGE_VERSION),
         'PACKAGE_STRING=\\"{}\\"'.format(PACKAGE_STRING),
     ],
-    includes = ["."],   # this will result in anyone who depends on this using `-isystem thirdparty/protobuf-c`
+    includes = ["."],   # this will result in anyone who depends on this using `-isystem third_party/protobuf-c`
     deps = [
         "@com_google_protobuf//:protobuf",
     ]
